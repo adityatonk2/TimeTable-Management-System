@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Department Timetable</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            padding: 20px;
+            background-color: #f0f2f5;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            color: #555db3;
+            margin-bottom: 20px;
+        }
+
+        .filters {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        select, input {
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            min-width: 200px;
+        }
+
+        .search-box {
+            flex-grow: 1;
+            min-width: 200px;
+        }
+
+        .days-tabs {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .tab-button {
+            padding: 10px 20px;
+            border: none;
+            background-color: #e3f2fd;
+            cursor: pointer;
+            border-radius: 4px;
+            flex-grow: 1;
+            min-width: 100px;
+        }
+
+        .tab-button.active {
+            background-color: #2196f3;
+            color: white;
+        }
+
+        .timetable {
+            display: grid;
+            gap: 15px;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        }
+
+        .time-slot {
+            background-color: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .time-slot h3 {
+            color: #1976d2;
+            margin-bottom: 8px;
+        }
+
+        .time-slot p {
+            color: #555;
+            margin: 5px 0;
+        }
+
+        .print-btn {
+            padding: 10px 20px;
+            background-color: #4caf50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-bottom: 20px;
+        }
+
+        @media print {
+            .filters, .days-tabs, .print-btn {
+                display: none;
+            }
+
+            .time-slot {
+                break-inside: avoid;
+                box-shadow: none;
+                border: 1px solid #ccc;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .filters {
+                flex-direction: column;
+            }
+
+            .days-tabs {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+        footer {
+            background-color:white;
+            color: black;
+            text-align: center;
+            padding: 20px;
+            border-radius: 20px;
+        }
+
+        .footer-container {
+            max-width: 800px;
+            margin: auto;
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+            margin: 10px 0;
+        }
+
+        .footer-links a {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            transition: transform 0.3s ease;
+        }
+
+        .footer-links a:hover {
+            transform: scale(1.1);
+        }
+
+        .footer-links img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+        }
+
+        .footer-text {
+            font-size: 14px;
+            margin-top: 10px;
+            opacity: 0.8;
+        }
+
+        @media (max-width: 480px) {
+            .footer-links {
+                flex-direction: column;
+                gap: 10px;
+            }
+        }
+
+        body {
+            background-color: #f8f9fa;
+            color: #333;
+            padding: 20px;
+        }
+
+        .blog-section {
+            max-width: 800px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .blog-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .blog-header h2 {
+            font-size: 26px;
+            color: #222;
+        }
+
+        .blog-content p {
+            font-size: 16px;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+
+        .blog-footer {
+            text-align: center;
+            font-size: 14px;
+            margin-top: 15px;
+            color: #555;
+        }
+
+        @media (max-width: 480px) {
+            .blog-section {
+                padding: 15px;
+            }
+
+            .blog-header h2 {
+                font-size: 22px;
+            }
+
+            .blog-content p {
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>School of Engineering and Technology</h1>
+        <marquee><h1>Time Table for Even Semester</h1></marquee>
+        
+        <div class="filters">
+            <select id="courseSelect">
+                <option value="">Select Course</option>
+                <option value="bsc-it">BSc IT</option>
+                <option value="bsc-cs">BSc CS</option>
+                <option value="bca">BCA</option>
+                <option value="mca">MCA</option>
+            </select>
+
+            <select id="semesterSelect" disabled>
+                <option value="">Select Semester</option>
+            </select>
+
+            <input type="text" id="searchInput" class="search-box" placeholder="Search subjects, rooms...">
+        </div>
+
+        <button class="print-btn" onclick="window.print()">Print Timetable</button>
+
+        <div class="days-tabs">
+            <button class="tab-button active" data-day="monday">Monday</button>
+            <button class="tab-button" data-day="tuesday">Tuesday</button>
+            <button class="tab-button" data-day="wednesday">Wednesday</button>
+            <button class="tab-button" data-day="thursday">Thursday</button>
+            <button class="tab-button" data-day="friday">Friday</button>
+            <button class="tab-button" data-day="saturday">Saturday</button>
+        </div>
+
+        <div id="timetableContainer" class="timetable">
+            <!-- Timetable content will be inserted here -->
+        </div>
+    </div>
+    <!-- Blog Section -->
+    <section class="blog-section">
+        <div class="blog-header">
+            <h2>About Me</h2>
+        </div>
+        <div class="blog-content">
+            <p>Hey there! I'm Aditya, a passionate web developer with experience in frontend and backend development. I love building websites and working with new technologies.</p>
+            <p>Recently, I am facing a problem while going through my time table it was very clustered and inconsistent Excel sheet so i decided to help my fellow developers and department students</p>
+            <P>Its Only Functions for Even Semester Students But I Share the Source Code if Any one Interested from odd Sem.</P>
+            <p>All the Insights are Researched through SGRRU Official Website and Sorry For B-Tech Candidate Your Data is Not Updated On Site.</p>
+            <p>My goal is to create tools and software that make people's lives easier, and I'm always exploring new tech to stay ahead.</p>
+            <p>Feel free to Connect and share your thoughts.</p>
+        </div>
+        <div class="blog-footer">
+            <p>Thanks for visiting! 🚀</p>
+        </div>
+        <footer>
+            <div class="footer-container">
+                <p>Connect with me:</p>
+                <div class="footer-links">
+                    <a href="https://instagram.com/i_aditya_tonk" target="_blank">
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/a/a5/Instagram_icon.png" alt="Instagram">
+                    </a>
+                    <a href="https://github.com/adityatonk2" target="_blank">
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/9/91/Octicons-mark-github.svg" alt="GitHub">
+                    </a>
+                    <a href="https://www.linkedin.com/in/aditya-tonk-0b0794234/" target="_blank">
+                        <img src="https://cdn-icons-png.flaticon.com/512/145/145807.png" alt="LinkedIn">
+                    </a>
+                </div>
+                <p class="footer-text">© 2025 Aditya Kumar Tonk | Building cool projects & sharing knowledge.</p>
+            </div>
+        </footer>
+    </section>
+    
+    <script>
+        // Sample timetable data - replace with your actual data
+        const timetableData = {
+            // Bsc it all even sem data is here 
+            'bsc-it': {
+                semesters: 6,
+                1:{time : "No Data For Odd Semester"},
+                2: {
+                    monday: [
+                        { time: '10:00 AM', subject: 'Health Awareness & Hygiene', code: 'BITSC201', professor: 'S.U' },
+                        { time: '11:00 AM', subject: 'Data Structure using C.', code: 'BITDSC-202', professor: 'MR. VAIBHAV SHARMA' },
+                        { time: '12:00 AM', subject: 'Cyber Security and Law.', room: 'BITGE201 ', professor: 'MRS. KAMAL PREET' },
+                        { time: '3:00 PM', subject: 'Digital Electronics', code : 'BITDSC203', professor: 'S.R' }
+                    ],
+                    tuesday: [
+                    { time: '10:00 AM', subject: 'Health Awareness & Hygiene', code: 'BITSC201', professor: 'S.U' },
+                        { time: '11:00 AM', subject: 'not-metioned', code: 'BITCITVC201', professor: 'GL' },
+                        { time: '12:00 AM', subject: 'Cyber Security and Law.', code: 'BITGE201 ', professor: 'MRS. KAMAL PREET' },
+                        { time: '3:00 PM', subject: 'Lab-Data Structure', code: 'BITP22', professor: 'MR. VAIBHAV SHARMA' },
+                    ],
+                    wednesday: [
+                        { time: '10:00 AM', subject: 'Operating Systems', code: 'BITDSC 201', professor: 'Mr. PRADEEP SEMWAL' },
+                        { time: '11:00 AM', subject: 'Data Structure using C.', code: 'BITDSC-202', professor: 'MR. VAIBHAV SHARMA' },
+                        { time: '12:00 AM', subject: 'Lab-Data Structure', code: 'BITP22', professor: 'MR. VAIBHAV SHARMA' },
+                        { time: '3:00 PM', subject: 'Digital Electronics', code : 'BITDSC203', professor: 'S.R' }
+                    ],
+                    thursday: [
+                        { time: '10:00 AM', subject: 'NOT-MENTIONED', code: 'BTDSC201 ', professor: 'Mr. Vaibhav Sharma' },
+                        { time: '11:00 AM', subject: 'Unix Lab', code : 'BITP-21', professor: 'Mr. PRADEEP SEMWAL' },
+                        { time: '12:00 AM', subject: 'Unix Lab', code : 'BITP-21', professor: 'Mr. PRADEEP SEMWAL' },
+                        { time: '2:00 PM', subject: 'not-metioned', code: 'BITCITVC201', professor: 'GL' },
+                        { time: '3:00 PM', subject: 'Digital Electronics', code : 'BITDSC203', professor: 'S.R' }
+                    ],
+                    friday: [
+                    { time: '10:00 AM', subject: 'Digital Electronics', code : 'BITDSC203', professor: 'S.R' },
+                    { time: '11:00 AM', subject: 'Operating Systems', code: 'BITDSC 201', professor: 'Mr. PRADEEP SEMWAL' },
+                    { time: '12:00 AM', subject: 'Cyber Security and Law.', room: 'BITGE201 ', professor: 'MRS. KAMAL PREET' },
+                    ],
+                    saturday: [
+                    { time: '11:00 AM', subject: 'Operating Systems', code: 'BITDSC 201', professor: 'Mr. PRADEEP SEMWAL' },
+                    { time: '12:00 AM', subject: 'Cyber Security and Law.', code: 'BITGE201 ', professor: 'MRS. KAMAL PREET' },
+                    ],
+                },
+                3:{time : "No Data For Odd Semester"},
+                4: {
+                    monday: [
+                        { time: '10:00 AM', subject: 'NOT MENTIONED', code: 'BITDSE 401', professor: 'S.B' },
+                        { time: '11:00 AM', subject: 'E-COMMERCE', code: 'BITGE-401', professor: 'S.R' },
+                        { time: '12:00 AM', subject: 'E-COMMERCE', code: 'BITGE-401', professor: 'S.R' },
+                        { time: '2:00 PM', subject: ' Reasoning Aptitude', code: 'BITSC-401', professor: 'S.U' },
+                    ],
+                    tuesday: [
+                    { time: '10:00 AM', subject: 'not-metioned', code: 'BITCITVC201', professor: 'GL' },
+                    { time: '12:00 PM', subject: ' Reasoning Aptitude', code: 'BITSC-401', professor: 'S.U' },
+                    ],
+                    wednesday: [
+                        { time: '10:00 AM', subject: ' Lab- PHP Programming', room: 'BTIP42', professor: 'G.L' },
+                        { time: '11:00 AM', subject: 'NOT MENTIONED', code: 'BITDSE 401', professor: 'S.B' },
+                        { time: '12:00 AM', subject: 'Introduction to IOT', code: 'BITDSC 403', professor: 'MRS. KAMALPREET' },
+                        { time: '2:00 PM', subject: ' Lab- PHP Programming', code: 'BTIP42', professor: 'G.L' },
+                    ],
+                    thursday: [
+                        { time: '10:00 AM', subject: 'E-COMMERCE', code: 'BITGE-401', professor: 'S.R' },
+                        { time: '11:00 AM', subject: 'PHP Programming', code:'BITDSC402', professor: 'G.L' },
+                        { time: '12:00 AM', subject: 'Introduction to IOT', code: 'BITDSC 403', professor: 'MRS. KAMALPREET' },
+                        { time: '2:00 PM', subject: 'Lab- Java Programming', code: 'BITP-41', professor: 'S.B' },
+                        { time: '3:00 PM', subject: 'Lab- Java Programming', code: 'BITP-41', professor: 'S.B' },
+                    ],
+                    friday: [
+                    { time: '10:00 AM', subject: 'Introduction to IOT', code: 'BITDSC 403', professor: 'MRS. KAMALPREET' },
+                        { time: '10:00 AM', subject: 'Operating Systems', room: '202', professor: 'Dr. Brown' },
+                        { time: '2:00 PM', subject: ' JAVA Programming', code:'BITDSC401', professor: 'S.R' },
+                    ],
+                    saturday: [
+                    { time: '10:00 AM', subject: 'not-metioned', code: 'BITCITVC201', professor: 'GL' },
+                    { time: '11:00 AM', subject: 'Introduction to IOT', code: 'BITDSC 403', professor: 'MRS. KAMALPREET' },
+                    { time: '12:00 AM', subject: 'PHP Programming', code:'BITDSC402', professor: 'G.L' },
+                    { time: '1:00 PM', subject: 'NOT MENTIONED', code: 'BITDSE 401', professor: 'S.B' },
+                    ],
+                    // Add more days...
+                },
+                5:{time : "No Data For Odd Semester"},
+                6: {
+                    monday: [
+                        { time: '10:00 AM', subject: 'C# and .NET. Programming.', code: 'BITDSC601 ', professor: 'Mr. Vaibhav Sharma' },
+                        { time: '11:00 AM', subject: 'Software. Engineering', code: 'BITDSC-602', professor: 'Mr. Pradeep Semwal' },
+                        { time: '12:00 AM', subject: ' Management. Information. System', code: 'BITGE-604', professor: 'M.A' },
+                    ],
+                    tuesday: [
+                    { time: '10:00 AM', subject: 'C# and .NET. Programming.', code: 'BITDSC601 ', professor: 'Mr. Vaibhav Sharma' },
+                        { time: '11:00 AM', subject: 'Software. Engineering', code: 'BITDSC-602', professor: 'Mr. Pradeep Semwal' },
+                        { time: '2:00 PM', subject: ' Management. Information. System', code: 'BITGE-604', professor: 'M.A' },
+                    ],
+                    wednesday: [
+                        { time: '10:00 AM', subject: 'Introduction to logic', code: 'BITDSE605C ', professor: 'S.U' },
+                        { time: '11:00 AM', subject: 'Big Data Analytics', code: 'BITDSC603', professor: 'S.R' },
+                        { time: '12:00 AM', subject: 'Introduction to logic', code: 'BITDSE605C ', professor: 'S.U' },
+                    ],
+                    thursday: [
+                    { time: '11:00 AM', subject: 'C# and .NET. Programming.', code: 'BITDSC601 ', professor: 'Mr. Vaibhav Sharma' },
+                    { time: '12:00 AM', subject: 'Big Data Analytics', code: 'BITDSC603', professor: 'S.R' },
+                    { time: '2:00 PM', subject: 'Lab-C# and .NET. Programming.', code: 'BITP61', professor: 'Mr. Vaibhav Sharma' },
+                    { time: '3:00 PM', subject: 'Lab-C# and .NET. Programming.', code: 'BITP61', professor: 'Mr. Vaibhav Sharma' },
+                    ],
+                    friday: [
+                    { time: '10:00 AM', subject: 'Introduction to logic', code: 'BITDSE605C ', professor: 'S.U' },
+                    { time: '11:00 AM', subject: 'Big Data Analytics', code: 'BITDSC603', professor: 'S.R' },
+                    { time: '12:00 AM', subject: 'Introduction to logic', code: 'BITDSE605C ', professor: 'S.U' },
+                    { time: '2:00 AM', subject: 'Software. Engineering', code: 'BITDSC-602', professor: 'Mr. Pradeep Semwal' },
+                    ],
+                    saturday: [
+                    { time: '10:00 AM', subject: ' Management. Information. System', code: 'BITGE-604', professor: 'M.A' },
+                    { time: '12:00 AM', subject: 'Big Data Analytics', code: 'BITDSC603', professor: 'S.R' },
+                    ],
+                },
+            },
+            'bsc-cs': {
+                semesters: 6,
+                1:{time : "No Data For Odd Semester"},
+                2: {
+                    monday: [
+                        { time: '10:00 AM', subject: 'Artificial Intelligence', code: 'BCSDSC203', professor: 'H.K' },
+                        { time: '11:00 AM', subject: 'Operating System.', code: 'BCSDSC201', professor: 'Mrs. Minit Arora' },
+                        { time: '2:00 PM', subject: 'Programming Paradigm and Internet technologies', code: 'BCSGE201', professor: 'Mr. Pradeep Semwal' }, 
+                    ],
+                    tuesday: [
+                    { time: '10:00 AM', subject: 'Artificial Intelligence', code: 'BCSDSC203', professor: 'H.K' },
+                    { time: '11:00 AM', subject: 'Operating System', code: 'BCSDSC201', professor: 'Mrs. Minit Arora' },
+                    { time: '12:00 AM', subject: 'Data Structure Using C', code: 'BCSDSC202', professor: 'H.S' },
+                    ],
+                    wednesday: [
+                    { time: '10:00 AM', subject: 'Artificial Intelligence', code: 'BCSDSC203', professor: 'H.K' },
+                    { time: '11:00 AM', subject: 'Data Structure Using C', code: 'BCSDSC202', professor: 'H.S' },
+                    { time: '12:00 AM', subject: 'Operating System', code: 'BCSDSC201', professor: 'Mrs. Minit Arora' },
+                    { time: '2:00 PM', subject: 'Operating System Lab', code: 'BCSDSC-P21', professor: 'Mrs. Minit Arora' },
+                    { time: '3:00 PM', subject: 'Operating System Lab', code: 'BCSDSC-P21', professor: 'Mrs. Minit Arora' },
+                    ],
+                    thursday: [
+                    { time: '10:00 AM', subject: 'Artificial Intelligence', code: 'BCSDSC203', professor: 'H.K' },
+                    { time: '11:00 AM', subject: 'Data Structure Using C', code: 'BCSDSC202', professor: 'H.S' },
+                    ],
+                    friday: [
+                    { time: '10:00 AM', subject: 'Art Of Clean Code', code : 'BCSCITVC201', professor: 'G.L'},
+                    { time: '11:00 AM', subject: 'Cyber Security and Law', code: 'BCSSSC201', professor: 'Mrs. KamalPreet' },
+                    { time: '12:00 PM', subject: 'Programming Paradigm and Internet technologies', code: 'BCSGE201', professor: 'Mr. Pradeep Semwal' },
+                    { time: '2:00 PM', subject: 'DSA Lab Using C ', code: 'BCSDSC-P22', professor: 'H.S' },
+                    { time: '2:00 PM', subject: 'DSA Lab Using C ', code: 'BCSDSC-P22', professor: 'H.S' },
+                    ],
+                    saturday: [
+                    { time: '10:00 AM', subject: 'Cyber Security and Law', code: 'BCSSSC201', professor: 'Mrs. KamalPreet' },
+                    { time: '11:00 AM', subject: 'Art Of Clean Code', code : 'BCSCITVC201', professor: 'G.L'},
+                    { time: '12:00 PM', subject: 'Programming Paradigm and Internet technologies', code: 'BCSGE201', professor: 'Mr. Pradeep Semwal' },
+                    ],
+                },
+                3:{time : "No Data For Odd Semester"},
+                4: {
+                    monday: [
+                        { time: '10:00 AM', subject: 'Java Programming', code: 'BCSDSC401', professor: 'H.S' },
+                        { time: '11:00 AM', subject: 'Software Engineering', code: 'BCSGE401', professor: 'Mr. Pradeep Semwal' },
+                        { time: '12:00 PM', subject: 'Quantitive Aptitude', code: 'BCSSC401', professor: 'S.U' },
+                        { time: '2:00 PM', subject: 'Digital Electronics', code: 'BCSDSC-403', professor: 'S.R' },
+                        { time: '3:00 PM', subject: 'Java Programming Lab', code: 'BCSDSC-P41', professor: 'H.S' },
+                        { time: '4:00 PM', subject: 'Java Programming Lab', code: 'BCSDSC-P41', professor: 'H.S' },
+                    ],
+                    tuesday: [
+                    { time: '10:00 AM', subject: 'Art of Clean Code', code: 'BCSCITVC401', professor: 'GL' },
+                    { time: '11:00 AM', subject: 'Software Engineering', code: 'BCSGE401', professor: 'Mr. Pradeep Semwal' },
+                    { time: '12:00 PM', subject: 'Database Management System', code: 'BCS-DSC402', professor: 'Mr. G.D Makkar' },
+                    { time: '2:00 PM', subject: 'Digital Electronics', code: 'BCSDSC-403', professor: 'S.R' },
+
+                    ],
+                    wednesday: [
+                    { time: '11:00 PM', subject: 'Quantitive Aptitude', code: 'BCSSC401', professor: 'S.U' },
+                    { time: '12:00 PM', subject: 'Database Management System', code: 'BCS-DSC402', professor: 'Mr. G.D Makkar' },
+                    { time: '2:00 PM', subject: 'Digital Electronics', code: 'BCSDSC-403', professor: 'S.R' },
+                    ],
+                    thursday: [
+                    { time: '12:00 AM', subject: 'Database Management System', code: 'BCS-DSC402', professor: 'Mr. G.D Makkar' },
+                    { time: '2:00 PM', subject: 'Digital Electronics', code: 'BCSDSC-403', professor: 'S.R' },
+                    { time: '3:00 PM', subject: 'Java Programming', code: 'BCSDSC401', professor: 'H.S' },
+                    ],
+                    friday: [
+                    { time: '11:00 AM', subject: 'Java Programming', code: 'BCSDSC401', professor: 'H.S' },
+                    { time: '2:00 PM', subject: 'Software Engineering', code: 'BCSGE401', professor: 'Mr. Pradeep Semwal' },
+                    ],
+                    saturday: [
+                    { time: '10:00 AM', subject: 'Art of Clean Code', code: 'BCSCITVC401', professor: 'GL' },
+                    { time: '11:00 AM', subject: 'Database Management System Lab', code: 'BCS-DSCP42', professor: 'Mr. G.D Makkar' },
+                    { time: '12:00 PM', subject: 'Database Management System Lab', code: 'BCS-DSCP42', professor: 'Mr. G.D Makkar' },
+                    ],
+                    // Add more days...
+                },
+                5:{time : "No Data For Odd Semester"},
+                6: {
+                    monday: [
+                        { time: '10:00 AM', subject: 'Andorid Programming Lab', code: 'BCS-P61', professor: 'Mrs. Apporva Talwar' },
+                        { time: '11:00 AM', subject: 'Andorid Programming Lab', code: 'BCS-P61', professor: 'Mrs. Apporva Talwar' },
+                        { time: '12:00 PM', subject: 'Computer Graphics', code: 'BCS-601', professor: 'S.B' },
+                        { time: '2:00 PM', subject: 'Seminar and Presentation', code: 'BCS-601', professor: 'Mr. Vaibhav Sharma' },
+                       
+                    ],
+                    tuesday: [
+                    { time: '10:00 AM', subject: 'Android Programming', code: 'BCS-DSE3.3', professor: 'Mrs. Apoorva Talwar' },
+                    { time: '11:00 AM', subject: 'Computer Graphics', code: 'BCS-601', professor: 'S.B' },
+                    { time: '12:00 PM', subject: 'Advance Database Management System', code: 'BCS-DSE4.2', professor: 'Mr. GD Makkar' },
+                    ],
+                    wednesday: [
+                    { time: '11:00 AM', subject: 'Android Programming', code: 'BCS-DSE3.3', professor: 'Mrs. Apoorva Talwar' },
+                    { time: '12:00 AM', subject: 'Advance Database Management System', code: 'BCS-DSE4.2', professor: 'Mr. GD Makkar' },
+                    { time: '2:00 PM', subject: 'Seminar and Presentation', code: 'BCS-601', professor: 'Mr. Vaibhav Sharma' },
+                    ],
+                    thursday: [
+                    { time: '10:00 AM', subject: 'Android Programming', code: 'BCS-DSE3.3', professor: 'Mrs. Apoorva Talwar' },
+                    { time: '11:00 AM', subject: 'Computer Graphics', code: 'BCS-601', professor: 'S.B' },
+                    { time: '12:00 PM', subject: 'Advance Database Management System', code: 'BCS-DSE4.2', professor: 'Mr. GD Makkar' },
+                    ],
+                    friday: [
+                    { time: '10:00 AM', subject: 'Android Programming', code: 'BCS-DSE3.3', professor: 'Mrs. Apoorva Talwar' },
+                    { time: '11:00 AM', subject: 'Computer Graphics', code: 'BCS-601', professor: 'S.B' },
+                    { time: '12:00 PM', subject: 'Advance Database Management System', code: 'BCS-DSE4.2', professor: 'Mr. GD Makkar' },
+                    ],
+                    saturday: [
+                    { time: '10:00 AM', subject: 'Andorid Programming Lab', code: 'BCS-P61', professor: 'Mrs. Apporva Talwar' },
+                    { time: '11:00 AM', subject: 'Andorid Programming Lab', code: 'BCS-P61', professor: 'Mrs. Apporva Talwar' },
+                    { time: '2:00 PM', subject: 'Seminar and Presentation', code: 'BCS-601', professor: 'Mr. Vaibhav Sharma' },
+                    ],
+                },
+            },
+            'bca': {
+                semesters: 6,
+                1:{time : "No Data For Odd Semester"},
+                2: {
+                    monday: [
+                        { time: '10:00 AM', subject: 'Cyber Security', code: 'BCAGE201', professor: 'Mrs. Kamalpreet Mam' },
+                        { time: '11:00 AM', subject: 'Data Structure and File Organisation', code: 'BCADSC201', professor: 'S.B' },
+                        { time: '12:00 PM', subject: 'Java Core', code: 'BCADSC202', professor: 'Mr. H.S' }, 
+                        { time: '2:00 PM', subject: 'Digital Electronics', code: 'BCADSC203', professor: 'S.R' }, 
+                    ],
+                    tuesday: [
+                    { time: '10:00 AM', subject: 'Cyber Security', code: 'BCAGE201', professor: 'Mrs. Kamalpreet Mam' },
+                    { time: '11:00 AM', subject: 'Java Core', code: 'BCADSC202', professor: 'Mr. H.S' },
+                    { time: '2:00 PM', subject: 'Digital Electronics', code: 'BCADSC203', professor: 'S.R' }, 
+                    ],
+                    wednesday: [
+                    { time: '10:00 AM', subject: 'Cyber Security', code: 'BCAGE201', professor: 'Mrs. Kamalpreet Mam' },
+                    { time: '11:00 AM', subject: 'Leadership Skills', code: 'BCASC201', professor: 'Mrs. Minit Arora Mam' },
+                    { time: '2:00 PM', subject: 'Digital Electronics', code: 'BCADSC203', professor: 'S.R' }, 
+                    { time: '3:00 PM', subject: 'Java Lab', code: 'BCA-P22', professor: 'H.S' }, 
+                    { time: '4:00 PM', subject: 'Java Lab', code: 'BCA-P22', professor: 'H.S' }, 
+                    ],
+                    thursday: [
+                    { time: '10:00 AM', subject: 'Cyber Security', code: 'BCAGE201', professor: 'Mrs. Kamalpreet Mam' },
+                    { time: '11:00 AM', subject: 'Java Core', code: 'BCADSC202', professor: 'Mr. H.S' },
+                    { time: '12:00 PM', subject: 'Art of Clean Code', code: 'BCACITV201', professor: 'G.L' },
+                    { time: '2:00 PM', subject: 'Digital Electronics', code: 'BCADSC203', professor: 'S.R' }, 
+                    ],
+                    friday: [
+                    { time: '10:00 AM', subject: 'Data Structure and File Organisation', code: 'BCADSC201', professor: 'S.B' },
+                    { time: '11:00 AM', subject: 'Leadership Skills', code: 'BCASC201', professor: 'Mrs. Minit Arora Mam' },
+                    { time: '2:00 PM', subject: 'Art of Clean Code', code: 'BCACITV201', professor: 'G.L' },
+                    ],
+                    saturday: [
+                    { time: '10:00 AM', subject: 'Data Structure and File Organisation', code: 'BCADSC201', professor: 'S.B' },
+                    { time: '11:00 AM', subject: 'Data Structure and File Organisation Lab', code: 'BCA-P21', professor: 'S.B' },
+                    { time: '12:00 AM', subject: 'Data Structure and File Organisation Lab', code: 'BCA-P21', professor: 'S.B' },
+                    ],
+                },
+                3:{time : "No Data For Odd Semester"},
+                4: {
+                    monday: [
+                        { time: '10:00 AM', subject: 'Database Management System', code: 'BCA-DSC401', professor: 'Mr G.D Makkar' },
+                        { time: '11:00 AM', subject: 'Analytical Reasoning', code: 'BCASC401', professor: 'S.U' },
+                        { time: '12:00 PM', subject: 'Digital Marketing', code: 'BCA-GE401', professor: 'Mr. Pradeep Semwal' },
+                        { time: '2:00 PM', subject: 'Database Management System Lab', code: 'BCA-P41', professor: 'Mr G.D Makkar' },
+                        { time: '3:00 PM', subject: 'Database Management System Lab', code: 'BCA-P41', professor: 'Mr G.D Makkar' },
+                    ],
+                    tuesday: [
+                    { time: '10:00 AM', subject: 'Database Management System', code: 'BCA-DSC401', professor: 'Mr G.D Makkar' },
+                    { time: '11:00 AM', subject: 'Analytical Reasoning', code: 'BCASC401', professor: 'S.U' },
+                    { time: '12:00 PM', subject: 'Operating System', code: 'BCA-DSC402', professor: 'Mrs. Minit Arora' },
+                    { time: '2:00 PM', subject: 'Software Engineering', code: 'BCA-DSC403', professor: 'Mrs. Apoorva Talwar' },
+                    { time: '3:00 PM', subject: 'Software Engineering', code: 'BCA-DSC403', professor: 'Mrs. Apoorva Talwar' },
+
+                    ],
+                    wednesday: [
+                    { time: '10:00 AM', subject: 'Database Management System', code: 'BCA-DSC401', professor: 'Mr G.D Makkar' },
+                    { time: '11:00 PM', subject: 'Digital Marketing', code: 'BCA-GE401', professor: 'Mr. Pradeep Semwal' },
+                    { time: '12:00 PM', subject: 'Art of Clean Code', code: 'BCA-CITVC401', professor: 'G.L' },
+                    ],
+                    thursday: [
+                    { time: '10:00 AM', subject: 'Operating System', code: 'BCA-DSC402', professor: 'Mrs. Minit Arora' },
+                    { time: '11:00 AM', subject: 'Software Engineering', code: 'BCA-DSC403', professor: 'Mrs. Apoorva Talwar' },
+                    ],
+                    friday: [
+                    { time: '10:00 PM', subject: 'Digital Marketing', code: 'BCA-GE401', professor: 'Mr. Pradeep Semwal' },
+                    { time: '11:00 PM', subject: 'Art of Clean Code', code: 'BCA-CITVC401', professor: 'G.L' },
+                    { time: '12:00 AM', subject: 'Software Engineering', code: 'BCA-DSC403', professor: 'Mrs. Apoorva Talwar' },
+                    { time: '2:00 PM', subject: 'Operating System Lab', code: 'BCA-P42', professor: 'Mrs. Minit Arora' },
+                    { time: '3:00 PM', subject: 'Operating System Lab', code: 'BCA-P42', professor: 'Mrs. Minit Arora' },
+                    ],
+                    saturday: [
+                    { time: '10:00 PM', subject: 'Digital Marketing', code: 'BCA-GE401', professor: 'Mr. Pradeep Semwal' },
+                    { time: '11:00 AM', subject: 'Operating System', code: 'BCA-DSC402', professor: 'Mrs. Minit Arora' },
+                    ],
+                },
+                5:{mssg : "No Data For Odd Semester"},
+                6: {
+                    monday: [
+                        { time: '10:00 AM', subject: 'Advance Software Engineering', code: 'BCA-DSC603', professor: 'S.R' },
+                        { time: '11:00 AM', subject: 'Internet of Things', code: 'BCA-DSE604A', professor: 'Mrs. Kamal Preet' },
+                        { time: '12:00 PM', subject: 'Business Intelligence', code: 'BCA-GE601', professor: 'Mrs. Apoorva Talwar' },
+                        { time: '2:00 PM', subject: 'Android Programming', code: 'BCA-DSC602', professor: 'Mrs. Apoorva Talwar' },
+                        { time: '3:00 PM', subject: 'Android Programming Lab', code: 'BCA-P62', professor: 'Mrs. Apoorva Talwar' },
+                       
+                    ],
+                    tuesday: [
+                    { time: '11:00 AM', subject: 'Internet of Things', code: 'BCA-DSE604A', professor: 'Mrs. Kamal Preet' },
+                    { time: '12:00 PM', subject: 'Advance Software Engineering', code: 'BCA-DSC603', professor: 'S.R' },
+                    { time: '2:00 PM', subject: 'Java Lab', code: 'BCA-P61', professor: 'Mr. Harish Sir' },
+                    { time: '3:00 PM', subject: 'Java Lab', code: 'BCA-P61', professor: 'Mr. Harish Sir' },
+                    ],
+                    wednesday: [
+                    { time: '10:00 PM', subject: 'Android Programming', code: 'BCA-DSC602', professor: 'Mrs. Apoorva Talwar' },
+                    { time: '11:00 AM', subject: 'Internet of Things', code: 'BCA-DSE604A', professor: 'Mrs. Kamal Preet' },
+                    { time: '12:00 PM', subject: 'Business Intelligence', code: 'BCA-GE601', professor: 'Mrs. Apoorva Talwar' },
+                    { time: '2:00 PM', subject: 'Advance Java Programming', code: 'BCA-DSC601', professor: 'Mr.Harish Sir' },
+                    ],
+                    thursday: [
+                    { time: '11:00 AM', subject: 'Internet of Things', code: 'BCA-DSE604A', professor: 'Mrs. Kamal Preet' },
+                    { time: '12:00 PM', subject: 'Android Programming Lab', code: 'BCA-P62', professor: 'Mrs. Apoorva Talwar' },
+                    ],
+                    friday: [
+                    { time: '10:00 AM', subject: 'Advance Java Programming', code: 'BCA-DSC601', professor: 'Mr.Harish Sir' },
+                    { time: '11:00 PM', subject: 'Business Intelligence', code: 'BCA-GE601', professor: 'Mrs. Apoorva Talwar' },
+                    { time: '12:00 PM', subject: 'Advance Software Engineering', code: 'BCA-DSC603', professor: 'S.R' },
+                    { time: '2:00 PM', subject: 'Android Programming', code: 'BCA-DSC602', professor: 'Mrs. Apoorva Talwar' },
+                    ],
+                    saturday: [
+                    { time: '10:00 AM', subject: 'Advance Java Programming', code: 'BCA-DSC601', professor: 'Mr.Harish Sir' },
+                    { time: '11:00 PM', subject: 'Advance Software Engineering', code: 'BCA-DSC603', professor: 'S.R' },
+                    { time: '12:00 PM', subject: 'Business Intelligence', code: 'BCA-GE601', professor: 'Mrs. Apoorva Talwar' },
+                    ],
+                },
+            },
+            'mca': {
+                semesters: 4,
+                1:{time : "No Data For Odd Semester"},
+                2: {
+                    monday: [
+                        { time: '10:00 AM', subject: 'Java Programming', code: 'MCA202', professor: 'Mr. Harish Sir' },
+                        { time: '11:00 AM', subject: 'Computer Based Stas and Numerical Techniques', code: 'MCA206', professor: 'S.K' },
+                        { time: '12:00 PM', subject: 'Artificial Intelligence', code: 'MCA205', professor: 'H.K' }, 
+                        { time: '3:00 PM', subject: 'Java Programming Lab', code: 'MCA202', professor: 'Mr. Harish Sir' },
+                        { time: '4:00 PM', subject: 'Java Programming Lab', code: 'MCA202', professor: 'Mr. Harish Sir' },
+                    ],
+                    tuesday: [
+                    { time: '10:00 AM', subject: 'DSA Using C', code: 'MCA201', professor: 'S.B' },
+                    { time: '11:00 AM', subject: 'Computer Based Stas and Numerical Techniques', code: 'MCA206', professor: 'S.K' },
+                    { time: '12:00 PM', subject: 'Artificial Intelligence', code: 'MCA205', professor: 'H.K' }, 
+                    { time: '2:00 PM', subject: 'Seminar and Presentation', code: 'MCA-SM24', professor: 'Mr. GD Makkar' }, 
+                    ],
+                    wednesday: [
+                    { time: '10:00 AM', subject: 'Graph Theory', code: 'MCA204', professor: 'Mrs. Minit Mam' },
+                    { time: '11:00 AM', subject: 'Computer Based Stas and Numerical Techniques', code: 'MCA206', professor: 'S.K' },
+                    { time: '12:00 PM', subject: 'Artificial Intelligence', code: 'MCA205', professor: 'H.K' },
+                    { time: '2:00 PM', subject: 'DSA Using C', code: 'MCA201', professor: 'S.B' }, 
+                    { time: '3:00 PM', subject: 'DSA Using C - Lab', code: 'MCA-P21', professor: 'S.B' }, 
+                    { time: '4:00 PM', subject: 'DSA Using C - Lab', code: 'MCA-P21', professor: 'S.B' }, 
+                  
+                    ],
+                    thursday: [
+                    { time: '10:00 AM', subject: 'Database Management System', code: 'MCA203', professor: 'Mr. G.D Makkar'},
+                    { time: '12:00 AM', subject: 'Graph Theory', code: 'MCA204', professor: 'Mrs. Minit Mam' },
+                    ],
+                    friday: [
+                    { time: '10:00 AM', subject: 'Database Management System', code: 'MCA203', professor: 'Mr. G.D Makkar'},
+                    { time: '11:00 AM', subject: 'Java Programming', code: 'MCA202', professor: 'Mr. Harish Sir' },
+                    { time: '12:00 PM', subject: 'DSA Using C', code: 'MCA201', professor: 'S.B' }, 
+                    { time: '2:00 PM', subject: 'Database Management System Lab', code: 'MCA-P23', professor: 'Mr. G.D Makkar'},
+                    { time: '3:00 PM', subject: 'Database Management System Lab', code: 'MCA-P23', professor: 'Mr. G.D Makkar'},
+                    ],
+                    saturday: [
+                    { time: '10:00 AM', subject: 'Database Management System', code: 'MCA203', professor: 'Mr. G.D Makkar'},
+                    { time: '12:00 AM', subject: 'Graph Theory', code: 'MCA204', professor: 'Mrs. Minit Mam' },
+                    ],
+                },
+                3:{time : "No Data For Odd Semester"},
+                4: {
+                    monday: [
+                        { time: '12:00 PM', subject: 'Data Science In Python', code: 'MCA-401.2', professor: 'S.K' },
+                        { time: '2:00 PM', subject: 'Network Security and Cryptography', code: 'MCA403', professor: 'H.K' },
+                    ],
+                    tuesday: [
+                    { time: '10:00 AM', subject: 'Cloud Computing', code: 'MCA402.3', professor: 'Mr. Pradeep Semwal' },
+                    { time: '12:00 PM', subject: 'Data Science In Python', code: 'MCA-401.2', professor: 'S.K' },
+                    { time: '2:00 PM', subject: 'Seminar and Presentation', code: 'MCA-SM42', professor: 'H.K' },
+                    ],
+                    wednesday: [
+                    { time: '12:00 PM', subject: 'Data Science In Python', code: 'MCA-401.2', professor: 'S.K' },
+                    { time: '2:00 PM', subject: 'Cloud Computing', code: 'MCA402.3', professor: 'Mr. Pradeep Semwal' },
+                    ],
+                    thursday: [
+                    { time: '10:00 PM', subject: 'Cloud Computing', code: 'MCA402.3', professor: 'Mr. Pradeep Semwal' },
+                    { time: '11:00 PM', subject: 'Data Science In Python Lab', code: 'MCA-P41.2', professor: 'S.K' },                    
+                    { time: '12:00 PM', subject: 'Data Science In Python Lab', code: 'MCA-P41.2', professor: 'S.K' }, 
+                    { time: '2:00 PM', subject: 'Seminar and Presentation', code: 'MCA-SM42', professor: 'H.K' },                   
+
+                    ],
+                    friday: [
+                    { time: '10:00 AM', subject: 'Network Security and Cryptography', code: 'MCA403', professor: 'H.K' },
+                    ],
+                    saturday: [
+                    { time: '10:00 AM', subject: 'Network Security and Cryptography', code: 'MCA403', professor: 'H.K' },
+                    ],
+                },
+            },
+        };
+
+        // DOM elements
+        const courseSelect = document.getElementById('courseSelect');
+        const semesterSelect = document.getElementById('semesterSelect');
+        const searchInput = document.getElementById('searchInput');
+        const timetableContainer = document.getElementById('timetableContainer');
+        const dayTabs = document.querySelectorAll('.tab-button');
+
+        // Current selections
+        let currentCourse = '';
+        let currentSemester = '';
+        let currentDay = 'monday';
+
+        // Event listeners
+        courseSelect.addEventListener('change', handleCourseChange);
+        semesterSelect.addEventListener('change', handleSemesterChange);
+        searchInput.addEventListener('input', handleSearch);
+        dayTabs.forEach(tab => tab.addEventListener('click', handleDayChange));
+
+        function handleCourseChange(e) {
+            currentCourse = e.target.value;
+            currentSemester = '';
+            updateSemesterOptions();
+            updateTimetable();
+        }
+
+        function handleSemesterChange(e) {
+            currentSemester = e.target.value;
+            updateTimetable();
+        }
+
+        function handleDayChange(e) {
+            dayTabs.forEach(tab => tab.classList.remove('active'));
+            e.target.classList.add('active');
+            currentDay = e.target.dataset.day;
+            updateTimetable();
+        }
+
+        function handleSearch(e) {
+            const searchTerm = e.target.value.toLowerCase();
+            const slots = document.querySelectorAll('.time-slot');
+            
+            slots.forEach(slot => {
+                const text = slot.textContent.toLowerCase();
+                slot.style.display = text.includes(searchTerm) ? 'block' : 'none';
+            });
+        }
+
+        function updateSemesterOptions() {
+            semesterSelect.innerHTML = '<option value="">Select Semester</option>';
+            semesterSelect.disabled = !currentCourse;
+
+            if (currentCourse && timetableData[currentCourse]) {
+                const numSemesters = timetableData[currentCourse].semesters;
+                for (let i = 2; i <= numSemesters; i+=2) {
+                    const option = document.createElement('option');
+                    option.value = i;
+                    option.textContent = `Semester ${i}`;
+                    semesterSelect.appendChild(option);
+                }
+            }
+        }
+
+        function updateTimetable() {
+            timetableContainer.innerHTML = '';
+
+            if (!currentCourse || !currentSemester) return;
+
+            const dayData = timetableData[currentCourse]?.[currentSemester]?.[currentDay] || [];
+            
+            dayData.forEach(slot => {
+                const slotElement = document.createElement('div');
+                slotElement.className = 'time-slot';
+                slotElement.innerHTML = `
+                    <h3>${slot.time}</h3>
+                    <p><strong>Subject:</strong> ${slot.subject}</p>
+                    <p><strong>Subject Code:</strong> ${slot.code}</p>
+                    <p><strong>Professor:</strong> ${slot.professor}</p>
+                `;
+                timetableContainer.appendChild(slotElement);
+            });
+        }
+    </script>
+</body>
+</html>
