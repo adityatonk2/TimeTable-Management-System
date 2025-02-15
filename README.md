@@ -34,7 +34,7 @@ Functionality: JavaScript (Basic search, filtering, and button interactions)
 
 Download or Clone the Repository:
 
-git clone https://github.com/yourusername/timetable-tracker.git
+[git clone https://github.com/yourusername/timetable-tracker.git](https://github.com/adityatonk2/TimeTable-Management-System.git)
 
 Open the index.html file in a browser to start using the application.
 
